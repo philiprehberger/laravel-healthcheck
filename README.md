@@ -1,0 +1,309 @@
+# laravel-healthcheck
+
+[![Tests](https://github.com/philiprehberger/laravel-healthcheck/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/laravel-healthcheck/actions/workflows/tests.yml)
+[![Latest Version](https://img.shields.io/packagist/v/philiprehberger/laravel-healthcheck.svg)](https://packagist.org/packages/philiprehberger/laravel-healthcheck)
+[![PHP Version](https://img.shields.io/packagist/php-v/philiprehberger/laravel-healthcheck.svg)](https://packagist.org/packages/philiprehberger/laravel-healthcheck)
+[![License](https://img.shields.io/packagist/l/philiprehberger/laravel-healthcheck.svg)](LICENSE)
+
+Configurable health check endpoint for Laravel with built-in checks and Kubernetes probe support.
+
+## Features
+
+- Drop-in health check endpoint at `/health` (configurable prefix)
+- Kubernetes liveness (`/health/live`) and readiness (`/health/ready`) probes
+- Built-in checks: database, cache, storage, Redis, queue, environment, HTTP
+- Pluggable: implement `HealthCheck` to add your own checks
+- Per-check timeout with graceful critical fallback
+- Optional result caching to reduce backend load
+- Configurable middleware and route prefix
+- Full test suite, PHPStan level 8, Laravel Pint enforced
+
+## Requirements
+
+- PHP ^8.2
+- Laravel ^11.0 or ^12.0
+
+## Installation
+
+```bash
+composer require philiprehberger/laravel-healthcheck
+```
+
+Laravel's package auto-discovery registers the service provider automatically.
+
+### Publishing the config
+
+```bash
+php artisan vendor:publish --tag=healthcheck-config
+```
+
+This creates `config/healthcheck.php`.
+
+## Usage
+
+### Basic health check
+
+Once installed, the following endpoints are immediately available:
+
+| Endpoint | Description |
+|---|---|
+| `GET /health` | Full report — `200` if healthy, `503` if not |
+| `GET /health/live` | Liveness probe — always `200` |
+| `GET /health/ready` | Readiness probe — `200` if healthy, `503` if not |
+
+Example response from `GET /health`:
+
+```json
+{
+  "status": "ok",
+  "duration_ms": 14.52,
+  "checks": [
+    {
+      "name": "database",
+      "status": "ok",
+      "message": "Database connection is healthy.",
+      "meta": { "connection": "mysql" }
+    },
+    {
+      "name": "cache",
+      "status": "ok",
+      "message": "Cache is healthy.",
+      "meta": []
+    },
+    {
+      "name": "environment",
+      "status": "ok",
+      "message": "Environment configuration looks healthy.",
+      "meta": { "env": "production", "debug": false }
+    }
+  ]
+}
+```
+
+When any check is **critical** or **warning**, the overall `status` reflects that and the HTTP status code becomes `503`.
+
+### Status levels
+
+| Level | Meaning |
+|---|---|
+| `ok` | Check passed |
+| `warning` | Non-fatal issue (e.g. debug enabled) |
+| `critical` | Check failed — affects readiness |
+
+The overall report status is `critical` if any check is critical; `warning` if any is warning and none is critical; `ok` only if all checks are ok.
+
+## Configuration
+
+`config/healthcheck.php`:
+
+```php
+return [
+    'route_prefix' => env('HEALTHCHECK_ROUTE_PREFIX', 'health'),
+
+    'middleware' => [],
+
+    'checks' => [
+        \PhilipRehberger\Healthcheck\Checks\DatabaseCheck::class,
+        \PhilipRehberger\Healthcheck\Checks\CacheCheck::class,
+        \PhilipRehberger\Healthcheck\Checks\StorageCheck::class,
+        \PhilipRehberger\Healthcheck\Checks\EnvironmentCheck::class,
+    ],
+
+    'timeout' => (int) env('HEALTHCHECK_TIMEOUT', 5),
+
+    'cache' => [
+        'enabled' => (bool) env('HEALTHCHECK_CACHE_ENABLED', false),
+        'ttl'     => (int) env('HEALTHCHECK_CACHE_TTL', 30),
+    ],
+];
+```
+
+### Restricting access with middleware
+
+```php
+'middleware' => ['auth:sanctum'],
+```
+
+Or use a custom IP-allowlist middleware for infrastructure-only access.
+
+### Enabling result caching
+
+To avoid hammering your database on every probe poll:
+
+```env
+HEALTHCHECK_CACHE_ENABLED=true
+HEALTHCHECK_CACHE_TTL=30
+```
+
+## Built-in checks
+
+### DatabaseCheck
+
+Tests that a PDO connection can be established.
+
+```php
+new DatabaseCheck()                    // uses default connection
+new DatabaseCheck('mysql_reporting')   // named connection
+```
+
+### CacheCheck
+
+Writes, reads, and deletes a probe key using the default cache driver.
+
+### StorageCheck
+
+Writes, reads, and deletes a probe file on the default filesystem disk.
+
+```php
+new StorageCheck()        // default disk
+new StorageCheck('s3')    // named disk
+```
+
+### RedisCheck
+
+Calls `PING` on the Redis connection. Returns a warning (not critical) if the Redis extension and Predis are both absent so the check degrades gracefully in environments without Redis.
+
+```php
+new RedisCheck()             // default connection
+new RedisCheck('cache')      // named connection
+```
+
+### QueueCheck
+
+Resolves the queue connection from the container to verify connectivity.
+
+```php
+new QueueCheck()             // default connection
+new QueueCheck('redis')      // named connection
+```
+
+### EnvironmentCheck
+
+Returns a **warning** when `APP_DEBUG=true` in a production environment.
+
+### HttpCheck
+
+Pings an external URL and verifies the response status code.
+
+```php
+new HttpCheck('https://api.stripe.com')
+new HttpCheck('https://api.stripe.com', timeout: 3, expectedStatus: 200, checkName: 'stripe')
+```
+
+Register via the service container for constructor-injected checks:
+
+```php
+// AppServiceProvider::register()
+$this->app->bind(\PhilipRehberger\Healthcheck\Checks\HttpCheck::class, fn () =>
+    new \PhilipRehberger\Healthcheck\Checks\HttpCheck(
+        url: 'https://api.stripe.com',
+        checkName: 'stripe_api',
+    )
+);
+```
+
+Then add the class string to `config/healthcheck.php` `checks` array.
+
+## Writing custom checks
+
+Implement the `HealthCheck` contract:
+
+```php
+use PhilipRehberger\Healthcheck\CheckResult;
+use PhilipRehberger\Healthcheck\Contracts\HealthCheck;
+
+class ElasticsearchCheck implements HealthCheck
+{
+    public function name(): string
+    {
+        return 'elasticsearch';
+    }
+
+    public function check(): CheckResult
+    {
+        try {
+            $info = app('elasticsearch')->info();
+
+            return CheckResult::ok(
+                $this->name(),
+                'Elasticsearch is healthy.',
+                ['version' => $info['version']['number']],
+            );
+        } catch (\Throwable $e) {
+            return CheckResult::critical($this->name(), $e->getMessage());
+        }
+    }
+}
+```
+
+Register in `config/healthcheck.php`:
+
+```php
+'checks' => [
+    // ...
+    ElasticsearchCheck::class,
+],
+```
+
+## Kubernetes probe configuration
+
+### Deployment manifest
+
+```yaml
+livenessProbe:
+  httpGet:
+    path: /health/live
+    port: 8080
+  initialDelaySeconds: 10
+  periodSeconds: 15
+  failureThreshold: 3
+
+readinessProbe:
+  httpGet:
+    path: /health/ready
+    port: 8080
+  initialDelaySeconds: 5
+  periodSeconds: 10
+  failureThreshold: 2
+```
+
+**Liveness** (`/health/live`) — always returns `200` as long as PHP-FPM/Octane is alive. Kubernetes will restart the container only if this stops responding, not on application-level failures.
+
+**Readiness** (`/health/ready`) — returns `200` only when all health checks pass. Kubernetes removes the pod from load balancer rotation while this returns `503`, enabling zero-downtime deploys during database migrations or cold-start delays.
+
+### Ingress — skip auth middleware on probe endpoints
+
+If you add auth middleware globally, exclude the probe paths in your ingress or use a separate middleware group:
+
+```php
+// config/healthcheck.php
+'route_prefix' => 'health',
+'middleware'   => [],   // no auth on probes — protect at the network level instead
+```
+
+## Running the tests
+
+```bash
+composer install
+vendor/bin/phpunit
+```
+
+## Code style
+
+```bash
+vendor/bin/pint
+```
+
+## Static analysis
+
+```bash
+vendor/bin/phpstan analyse
+```
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
+
+## License
+
+MIT. See [LICENSE](LICENSE).

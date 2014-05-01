@@ -1,0 +1,19 @@
+includes:
+    - vendor/nunomaduro/larastan/extension.neon
+
+parameters:
+    level: 8
+
+    paths:
+        - src
+        - config
+        - tests
+
+    checkMissingIterableValueType: false
+    checkGenericClassInNonGenericObjectType: false
+
+    ignoreErrors:
+        # Orchestra Testbench uses magic methods; suppress resulting errors.
+        - '#Call to an undefined method Orchestra\\Testbench\\TestCase::#'
+        # Laravel facades are resolved at runtime.
+        - '#Access to an undefined property Illuminate\\Support\\Facades\\[A-Z]#'
