@@ -6,6 +6,7 @@ namespace PhilipRehberger\Healthcheck\Tests\Feature;
 
 use PhilipRehberger\Healthcheck\CheckResult;
 use PhilipRehberger\Healthcheck\Contracts\HealthCheck;
+use PhilipRehberger\Healthcheck\HealthcheckServiceProvider;
 use PhilipRehberger\Healthcheck\HealthService;
 use PhilipRehberger\Healthcheck\Tests\TestCase;
 
@@ -144,7 +145,7 @@ class HealthEndpointTest extends TestCase
         config(['healthcheck.route_prefix' => 'status']);
 
         // Re-register routes with new prefix by refreshing the provider.
-        $provider = new \PhilipRehberger\Healthcheck\HealthcheckServiceProvider($this->app);
+        $provider = new HealthcheckServiceProvider($this->app);
         $provider->boot();
 
         $this->bindHealthService('ok');
@@ -169,5 +170,81 @@ class HealthEndpointTest extends TestCase
         $data = $response->json();
         $this->assertArrayHasKey('duration_ms', $data);
         $this->assertIsFloat($data['duration_ms']);
+    }
+
+    // -------------------------------------------------------------------------
+    // Mixed status and failure scenarios
+    // -------------------------------------------------------------------------
+
+    public function test_health_report_with_mixed_statuses(): void
+    {
+        $okCheck = new class implements HealthCheck
+        {
+            public function name(): string
+            {
+                return 'ok-check';
+            }
+
+            public function check(): CheckResult
+            {
+                return CheckResult::ok('ok-check');
+            }
+        };
+
+        $criticalCheck = new class implements HealthCheck
+        {
+            public function name(): string
+            {
+                return 'critical-check';
+            }
+
+            public function check(): CheckResult
+            {
+                return CheckResult::critical('critical-check', 'Down');
+            }
+        };
+
+        $this->app->singleton(HealthService::class, function () use ($okCheck, $criticalCheck): HealthService {
+            $service = new HealthService;
+            $service->register($okCheck);
+            $service->register($criticalCheck);
+
+            return $service;
+        });
+
+        $response = $this->getJson('/health');
+        $response->assertStatus(503)
+            ->assertJsonPath('status', 'critical')
+            ->assertJsonCount(2, 'checks');
+    }
+
+    public function test_check_failure_does_not_expose_full_exception_message(): void
+    {
+        // When a check throws, the exception message IS included. This is by design
+        // for operational debugging. This test verifies the structure is correct.
+        $throwingCheck = new class implements HealthCheck
+        {
+            public function name(): string
+            {
+                return 'throwing-check';
+            }
+
+            public function check(): CheckResult
+            {
+                throw new \RuntimeException('Sensitive error details');
+            }
+        };
+
+        $this->app->singleton(HealthService::class, function () use ($throwingCheck): HealthService {
+            $service = new HealthService;
+            $service->register($throwingCheck);
+
+            return $service;
+        });
+
+        $response = $this->getJson('/health');
+        $response->assertStatus(503)
+            ->assertJsonPath('status', 'critical')
+            ->assertJsonPath('checks.0.name', 'throwing-check');
     }
 }

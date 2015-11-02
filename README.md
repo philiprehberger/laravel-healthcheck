@@ -149,10 +149,12 @@ new DatabaseCheck('mysql_reporting')   // named connection
 ### CacheCheck
 
 Writes, reads, and deletes a probe key using the default cache driver.
+Resource cleanup is guaranteed — the probe key is always removed via `try-finally`, even if cache operations fail.
 
 ### StorageCheck
 
 Writes, reads, and deletes a probe file on the default filesystem disk.
+Resource cleanup is guaranteed — the probe file is always deleted via `try-finally`, even if read or content verification fails.
 
 ```php
 new StorageCheck()        // default disk

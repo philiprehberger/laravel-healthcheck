@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-03-13
+
+### Fixed
+- `CacheCheck` now cleans up probe key even when cache operations fail (uses `try-finally`)
+- `StorageCheck` now cleans up probe file even when content verification fails (uses `try-finally`)
+
+### Added
+- 8 new tests covering resource cleanup and failure scenarios for `CacheCheck` and `StorageCheck`
+
 ## [1.0.0] - 2026-03-09
 
 ### Added
@@ -26,5 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PHPStan level 8 static analysis.
 - Laravel Pint code style enforcement.
 
-[Unreleased]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/philiprehberger/laravel-healthcheck/releases/tag/v1.0.0

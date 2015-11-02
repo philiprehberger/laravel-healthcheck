@@ -33,11 +33,12 @@ class StorageCheck implements HealthCheck
                 ? config('filesystems.default', 'local')
                 : $this->disk;
 
-            $disk->put(self::TEST_FILE, self::TEST_CONTENT);
-
-            $content = $disk->get(self::TEST_FILE);
-
-            $disk->delete(self::TEST_FILE);
+            try {
+                $disk->put(self::TEST_FILE, self::TEST_CONTENT);
+                $content = $disk->get(self::TEST_FILE);
+            } finally {
+                $disk->delete(self::TEST_FILE);
+            }
 
             if ($content !== self::TEST_CONTENT) {
                 return CheckResult::critical(

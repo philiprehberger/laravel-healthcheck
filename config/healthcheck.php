@@ -1,6 +1,10 @@
 <?php
 
 declare(strict_types=1);
+use PhilipRehberger\Healthcheck\Checks\CacheCheck;
+use PhilipRehberger\Healthcheck\Checks\DatabaseCheck;
+use PhilipRehberger\Healthcheck\Checks\EnvironmentCheck;
+use PhilipRehberger\Healthcheck\Checks\StorageCheck;
 
 return [
 
@@ -43,10 +47,10 @@ return [
     |
     */
     'checks' => [
-        \PhilipRehberger\Healthcheck\Checks\DatabaseCheck::class,
-        \PhilipRehberger\Healthcheck\Checks\CacheCheck::class,
-        \PhilipRehberger\Healthcheck\Checks\StorageCheck::class,
-        \PhilipRehberger\Healthcheck\Checks\EnvironmentCheck::class,
+        DatabaseCheck::class,
+        CacheCheck::class,
+        StorageCheck::class,
+        EnvironmentCheck::class,
     ],
 
     /*
