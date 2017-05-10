@@ -283,22 +283,12 @@ If you add auth middleware globally, exclude the probe paths in your ingress or 
 'middleware'   => [],   // no auth on probes — protect at the network level instead
 ```
 
-## Running the tests
+## Development
 
 ```bash
 composer install
 vendor/bin/phpunit
-```
-
-## Code style
-
-```bash
-vendor/bin/pint
-```
-
-## Static analysis
-
-```bash
+vendor/bin/pint --test
 vendor/bin/phpstan analyse
 ```
 
