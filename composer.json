@@ -8,7 +8,8 @@
     "authors": [
         {
             "name": "Philip Rehberger",
-            "email": "philip@rehberger.io"
+            "email": "me@philiprehberger.com",
+            "role": "Developer"
         }
     ],
     "require": {
@@ -53,6 +54,6 @@
         "lint": "vendor/bin/pint",
         "analyse": "vendor/bin/phpstan analyse"
     },
-    "minimum-stability": "stable",
+    "minimum-stability": "dev",
     "prefer-stable": true
 }
