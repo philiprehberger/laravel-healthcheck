@@ -6,7 +6,7 @@
 
 Configurable health check endpoint with built-in checks and Kubernetes probe support.
 
-## Features
+### Features
 
 - Drop-in health check endpoint at `/health` (configurable prefix)
 - Kubernetes liveness (`/health/live`) and readiness (`/health/ready`) probes
