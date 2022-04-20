@@ -73,7 +73,7 @@ class HealthEndpointTest extends TestCase
         $response = $this->getJson('/health');
 
         $response->assertStatus(503)
-            ->assertJsonPath('status', 'warning');
+            ->assertJsonPath('status', 'degraded');
     }
 
     public function test_health_response_includes_check_details(): void

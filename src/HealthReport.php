@@ -6,7 +6,7 @@ namespace PhilipRehberger\Healthcheck;
 
 class HealthReport
 {
-    public readonly string $status;
+    public readonly HealthStatus $status;
 
     /**
      * @param  CheckResult[]  $checks
@@ -18,33 +18,49 @@ class HealthReport
         $this->status = $this->resolveOverallStatus();
     }
 
-    private function resolveOverallStatus(): string
+    private function resolveOverallStatus(): HealthStatus
     {
         $hasCritical = false;
-        $hasWarning = false;
+        $hasDegraded = false;
 
         foreach ($this->checks as $check) {
             if ($check->isCritical()) {
                 $hasCritical = true;
-            } elseif ($check->isWarning()) {
-                $hasWarning = true;
+            } elseif ($check->isDegraded() || $check->isWarning()) {
+                $hasDegraded = true;
             }
         }
 
         if ($hasCritical) {
-            return CheckResult::STATUS_CRITICAL;
+            return HealthStatus::Critical;
         }
 
-        if ($hasWarning) {
-            return CheckResult::STATUS_WARNING;
+        if ($hasDegraded) {
+            return HealthStatus::Degraded;
         }
 
-        return CheckResult::STATUS_OK;
+        return HealthStatus::Ok;
     }
 
     public function isHealthy(): bool
     {
-        return $this->status === CheckResult::STATUS_OK;
+        return $this->status === HealthStatus::Ok;
+    }
+
+    /**
+     * @return array<string, array<string, mixed>>
+     */
+    public function getMetrics(): array
+    {
+        $metrics = [];
+
+        foreach ($this->checks as $check) {
+            if ($check->metrics !== []) {
+                $metrics[$check->name] = $check->metrics;
+            }
+        }
+
+        return $metrics;
     }
 
     /**
@@ -53,7 +69,7 @@ class HealthReport
     public function toArray(): array
     {
         return [
-            'status' => $this->status,
+            'status' => $this->status->value,
             'duration_ms' => round($this->durationMs, 2),
             'checks' => array_map(fn (CheckResult $r) => $r->toArray(), $this->checks),
         ];

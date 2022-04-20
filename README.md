@@ -86,10 +86,11 @@ When any check is **critical** or **warning**, the overall `status` reflects tha
 | Level | Meaning |
 |---|---|
 | `ok` | Check passed |
+| `degraded` | Partial failure or performance issue |
 | `warning` | Non-fatal issue (e.g. debug enabled) |
 | `critical` | Check failed — affects readiness |
 
-The overall report status is `critical` if any check is critical; `warning` if any is warning and none is critical; `ok` only if all checks are ok.
+The overall report status uses the `HealthStatus` enum and resolves as: `critical` if any check is critical; `degraded` if any is degraded or warning (but none critical); `ok` only if all checks pass.
 
 ### Configuration
 
@@ -246,6 +247,45 @@ Register in `config/healthcheck.php`:
 ],
 ```
 
+### Degraded status
+
+Use the `degraded` factory when a check is partially failing or experiencing performance issues:
+
+```php
+public function check(): CheckResult
+{
+    $latency = $this->measureLatency();
+
+    if ($latency > 1000) {
+        return CheckResult::degraded(
+            $this->name(),
+            'High latency detected.',
+            ['latency_ms' => $latency],
+        );
+    }
+
+    return CheckResult::ok($this->name(), 'Healthy.', ['latency_ms' => $latency]);
+}
+```
+
+### Attaching metrics
+
+Attach arbitrary metrics to any check result using `withMetrics()`. Metrics are aggregated on the report via `getMetrics()`:
+
+```php
+$result = CheckResult::ok('database', 'Healthy.')
+    ->withMetrics([
+        'latency_ms' => 5,
+        'connections' => 10,
+        'pool_usage' => 0.42,
+    ]);
+
+// In the report:
+$report = $healthService->runAll();
+$metrics = $report->getMetrics();
+// ['database' => ['latency_ms' => 5, 'connections' => 10, 'pool_usage' => 0.42]]
+```
+
 ### Kubernetes probe configuration
 
 #### Deployment manifest
@@ -291,13 +331,33 @@ If you add auth middleware globally, exclude the probe paths in your ingress or 
 | `name(): string` | `string` | Unique check identifier |
 | `check(): CheckResult` | `CheckResult` | Execute the check and return a result |
 
+### `HealthStatus` (Enum)
+
+| Case | Value | Description |
+|------|-------|-------------|
+| `HealthStatus::Ok` | `'ok'` | All checks passed |
+| `HealthStatus::Degraded` | `'degraded'` | Partial failure or performance issue |
+| `HealthStatus::Critical` | `'critical'` | One or more checks failed |
+
 ### `CheckResult`
 
 | Method | Description |
 |--------|-------------|
 | `CheckResult::ok(string $name, string $message, array $meta)` | Passing result |
+| `CheckResult::degraded(string $name, string $message, array $meta)` | Degraded/partial failure |
 | `CheckResult::warning(string $name, string $message, array $meta)` | Non-fatal warning |
 | `CheckResult::critical(string $name, string $message, array $meta)` | Failing result |
+| `$result->withMetrics(array $metrics): CheckResult` | Attach metrics to a result |
+
+### `HealthReport`
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `$report->status` | `HealthStatus` | Overall status enum |
+| `$report->isHealthy()` | `bool` | `true` when status is `Ok` |
+| `$report->getMetrics()` | `array` | Aggregated metrics from all checks |
+| `$report->toArray()` | `array` | Full report as array |
+| `$report->toJson(int $flags)` | `string` | Full report as JSON |
 
 ## Development
 
