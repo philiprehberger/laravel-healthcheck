@@ -6,17 +6,6 @@
 
 Configurable health check endpoint with built-in checks and Kubernetes probe support.
 
-### Features
-
-- Drop-in health check endpoint at `/health` (configurable prefix)
-- Kubernetes liveness (`/health/live`) and readiness (`/health/ready`) probes
-- Built-in checks: database, cache, storage, Redis, queue, environment, HTTP
-- Pluggable: implement `HealthCheck` to add your own checks
-- Per-check timeout with graceful critical fallback
-- Optional result caching to reduce backend load
-- Configurable middleware and route prefix
-- Full test suite, PHPStan level 8, Laravel Pint enforced
-
 ## Requirements
 
 - PHP 8.2+
