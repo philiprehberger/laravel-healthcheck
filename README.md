@@ -3,6 +3,7 @@
 [![Tests](https://github.com/philiprehberger/laravel-healthcheck/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/laravel-healthcheck/actions/workflows/tests.yml)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/laravel-healthcheck.svg)](https://packagist.org/packages/philiprehberger/laravel-healthcheck)
 [![License](https://img.shields.io/github/license/philiprehberger/laravel-healthcheck)](LICENSE)
+[![Sponsor](https://img.shields.io/badge/sponsor-GitHub%20Sponsors-ec6cb9)](https://github.com/sponsors/philiprehberger)
 
 Configurable health check endpoint with built-in checks and Kubernetes probe support.
 
