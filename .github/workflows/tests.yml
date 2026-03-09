@@ -54,21 +54,17 @@ jobs:
         run: vendor/bin/phpunit --no-coverage
 
   lint:
-    name: Lint (PHP ${{ matrix.php }})
+    name: Lint
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        php: ["8.2"]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up PHP ${{ matrix.php }}
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: "8.4"
           extensions: mbstring
           coverage: none
 
@@ -79,21 +75,17 @@ jobs:
         run: vendor/bin/pint --test
 
   static-analysis:
-    name: Static Analysis (PHP ${{ matrix.php }})
+    name: Static Analysis
     runs-on: ubuntu-latest
-
-    strategy:
-      matrix:
-        php: ["8.2"]
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Set up PHP ${{ matrix.php }}
+      - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
-          php-version: ${{ matrix.php }}
+          php-version: "8.4"
           extensions: mbstring
           coverage: none
 
