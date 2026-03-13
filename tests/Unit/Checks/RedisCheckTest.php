@@ -7,6 +7,7 @@ namespace PhilipRehberger\Healthcheck\Tests\Unit\Checks;
 use Illuminate\Support\Facades\Redis;
 use PhilipRehberger\Healthcheck\Checks\RedisCheck;
 use PhilipRehberger\Healthcheck\Tests\TestCase;
+use Predis\Client;
 
 class RedisCheckTest extends TestCase
 {
@@ -19,7 +20,7 @@ class RedisCheckTest extends TestCase
     {
         // When neither the redis extension nor predis is installed, the check
         // should return a warning rather than a critical.
-        if (extension_loaded('redis') || class_exists(\Predis\Client::class)) {
+        if (extension_loaded('redis') || class_exists(Client::class)) {
             $this->markTestSkipped('Redis extension or Predis is available; cannot test unavailability.');
         }
 
@@ -31,7 +32,7 @@ class RedisCheckTest extends TestCase
 
     public function test_returns_critical_when_ping_fails(): void
     {
-        if (! extension_loaded('redis') && ! class_exists(\Predis\Client::class)) {
+        if (! extension_loaded('redis') && ! class_exists(Client::class)) {
             $this->markTestSkipped('Redis extension and Predis are not available.');
         }
 
@@ -49,7 +50,7 @@ class RedisCheckTest extends TestCase
 
     public function test_returns_ok_when_ping_returns_true(): void
     {
-        if (! extension_loaded('redis') && ! class_exists(\Predis\Client::class)) {
+        if (! extension_loaded('redis') && ! class_exists(Client::class)) {
             $this->markTestSkipped('Redis extension and Predis are not available.');
         }
 
@@ -66,7 +67,7 @@ class RedisCheckTest extends TestCase
 
     public function test_returns_ok_when_ping_returns_pong_string(): void
     {
-        if (! extension_loaded('redis') && ! class_exists(\Predis\Client::class)) {
+        if (! extension_loaded('redis') && ! class_exists(Client::class)) {
             $this->markTestSkipped('Redis extension and Predis are not available.');
         }
 

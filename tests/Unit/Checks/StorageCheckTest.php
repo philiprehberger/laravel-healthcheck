@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhilipRehberger\Healthcheck\Tests\Unit\Checks;
 
+use Illuminate\Contracts\Filesystem\Filesystem;
 use Illuminate\Support\Facades\Storage;
 use PhilipRehberger\Healthcheck\Checks\StorageCheck;
 use PhilipRehberger\Healthcheck\Tests\TestCase;
@@ -55,5 +56,51 @@ class StorageCheckTest extends TestCase
         $check->check();
 
         Storage::disk('local')->assertMissing('_healthcheck_storage_probe.txt');
+    }
+
+    public function test_storage_check_cleans_up_on_read_failure(): void
+    {
+        $mockDisk = \Mockery::mock(Filesystem::class);
+        $mockDisk->shouldReceive('put')->once()->with('_healthcheck_storage_probe.txt', 'ok');
+        $mockDisk->shouldReceive('get')->once()->andThrow(new \RuntimeException('Read error'));
+        $mockDisk->shouldReceive('delete')->once()->with('_healthcheck_storage_probe.txt');
+
+        Storage::shouldReceive('disk')->andReturn($mockDisk);
+
+        $check = new StorageCheck;
+        $result = $check->check();
+
+        $this->assertSame('critical', $result->status);
+    }
+
+    public function test_storage_check_cleans_up_on_content_mismatch(): void
+    {
+        $mockDisk = \Mockery::mock(Filesystem::class);
+        $mockDisk->shouldReceive('put')->once();
+        $mockDisk->shouldReceive('get')->once()->andReturn('wrong_content');
+        $mockDisk->shouldReceive('delete')->once()->with('_healthcheck_storage_probe.txt');
+
+        Storage::shouldReceive('disk')->andReturn($mockDisk);
+
+        $check = new StorageCheck;
+        $result = $check->check();
+
+        $this->assertSame('critical', $result->status);
+        $this->assertStringContainsString('unexpected', strtolower($result->message));
+    }
+
+    public function test_storage_check_healthy_cleans_up_probe_file(): void
+    {
+        $mockDisk = \Mockery::mock(Filesystem::class);
+        $mockDisk->shouldReceive('put')->once();
+        $mockDisk->shouldReceive('get')->once()->andReturn('ok');
+        $mockDisk->shouldReceive('delete')->once()->with('_healthcheck_storage_probe.txt');
+
+        Storage::shouldReceive('disk')->andReturn($mockDisk);
+
+        $check = new StorageCheck;
+        $result = $check->check();
+
+        $this->assertSame('ok', $result->status);
     }
 }

@@ -7,6 +7,7 @@ namespace PhilipRehberger\Healthcheck\Checks;
 use Illuminate\Support\Facades\Redis;
 use PhilipRehberger\Healthcheck\CheckResult;
 use PhilipRehberger\Healthcheck\Contracts\HealthCheck;
+use Predis\Client;
 use Throwable;
 
 class RedisCheck implements HealthCheck
@@ -59,6 +60,6 @@ class RedisCheck implements HealthCheck
 
     private function isRedisAvailable(): bool
     {
-        return extension_loaded('redis') || class_exists(\Predis\Client::class);
+        return extension_loaded('redis') || class_exists(Client::class);
     }
 }

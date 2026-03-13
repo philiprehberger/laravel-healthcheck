@@ -40,6 +40,7 @@ class CacheCheckTest extends TestCase
     public function test_returns_critical_on_cache_exception(): void
     {
         Cache::shouldReceive('put')->andThrow(new \RuntimeException('Connection refused'));
+        Cache::shouldReceive('forget')->with('_healthcheck_cache_probe');
 
         $check = new CacheCheck;
         $result = $check->check();
@@ -54,5 +55,40 @@ class CacheCheckTest extends TestCase
         $check->check();
 
         $this->assertNull(Cache::get('_healthcheck_cache_probe'));
+    }
+
+    public function test_cache_check_cleans_up_on_put_failure(): void
+    {
+        Cache::shouldReceive('put')->andThrow(new \RuntimeException('Put failed'));
+        Cache::shouldReceive('forget')->once()->with('_healthcheck_cache_probe');
+
+        $check = new CacheCheck;
+        $result = $check->check();
+
+        $this->assertSame('critical', $result->status);
+    }
+
+    public function test_cache_check_cleans_up_on_get_failure(): void
+    {
+        Cache::shouldReceive('put')->andReturn(true);
+        Cache::shouldReceive('get')->andThrow(new \RuntimeException('Get failed'));
+        Cache::shouldReceive('forget')->once()->with('_healthcheck_cache_probe');
+
+        $check = new CacheCheck;
+        $result = $check->check();
+
+        $this->assertSame('critical', $result->status);
+    }
+
+    public function test_cache_check_healthy_cleans_up_probe_key(): void
+    {
+        Cache::shouldReceive('put')->andReturn(true);
+        Cache::shouldReceive('get')->andReturn('ok');
+        Cache::shouldReceive('forget')->once()->with('_healthcheck_cache_probe');
+
+        $check = new CacheCheck;
+        $result = $check->check();
+
+        $this->assertSame('ok', $result->status);
     }
 }

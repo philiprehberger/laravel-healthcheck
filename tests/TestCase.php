@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace PhilipRehberger\Healthcheck\Tests;
 
+use Illuminate\Foundation\Application;
 use Orchestra\Testbench\TestCase as OrchestraTestCase;
 use PhilipRehberger\Healthcheck\HealthcheckServiceProvider;
 
 abstract class TestCase extends OrchestraTestCase
 {
     /**
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param  Application  $app
      * @return array<int, class-string>
      */
     protected function getPackageProviders($app): array
@@ -21,7 +22,7 @@ abstract class TestCase extends OrchestraTestCase
     }
 
     /**
-     * @param  \Illuminate\Foundation\Application  $app
+     * @param  Application  $app
      */
     protected function defineEnvironment($app): void
     {

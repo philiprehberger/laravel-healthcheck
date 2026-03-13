@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace PhilipRehberger\Healthcheck\Tests\Unit\Checks;
 
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use PhilipRehberger\Healthcheck\Checks\HttpCheck;
 use PhilipRehberger\Healthcheck\Tests\TestCase;
@@ -47,7 +48,7 @@ class HttpCheckTest extends TestCase
     public function test_returns_critical_on_connection_exception(): void
     {
         Http::fake(['https://down.example.com' => function () {
-            throw new \Illuminate\Http\Client\ConnectionException('Connection refused');
+            throw new ConnectionException('Connection refused');
         }]);
 
         $check = new HttpCheck('https://down.example.com');

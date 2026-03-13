@@ -25,13 +25,16 @@ class CacheCheck implements HealthCheck
     public function check(): CheckResult
     {
         try {
-            Cache::put(self::TEST_KEY, self::TEST_VALUE, self::TTL);
+            $testValue = self::TEST_VALUE;
 
-            $value = Cache::get(self::TEST_KEY);
+            try {
+                Cache::put(self::TEST_KEY, $testValue, self::TTL);
+                $value = Cache::get(self::TEST_KEY);
+            } finally {
+                Cache::forget(self::TEST_KEY);
+            }
 
-            Cache::forget(self::TEST_KEY);
-
-            if ($value !== self::TEST_VALUE) {
+            if ($value !== $testValue) {
                 return CheckResult::critical(
                     $this->name(),
                     'Cache read returned unexpected value.',
