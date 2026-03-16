@@ -2,7 +2,9 @@
     "name": "philiprehberger/laravel-healthcheck",
     "description": "Configurable health check endpoint with built-in checks and Kubernetes probe support.",
     "keywords": ["laravel", "health", "healthcheck", "kubernetes", "k8s", "monitoring"],
+    "type": "library",
     "license": "MIT",
+    "homepage": "https://github.com/philiprehberger/laravel-healthcheck",
     "authors": [
         {
             "name": "Philip Rehberger",
@@ -45,6 +47,11 @@
         "allow-plugins": {
             "php-http/discovery": true
         }
+    },
+    "scripts": {
+        "test": "vendor/bin/phpunit",
+        "lint": "vendor/bin/pint",
+        "analyse": "vendor/bin/phpstan analyse"
     },
     "minimum-stability": "stable",
     "prefer-stable": true
