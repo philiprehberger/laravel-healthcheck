@@ -1,9 +1,8 @@
-# laravel-healthcheck
+# Laravel Healthcheck
 
 [![Tests](https://github.com/philiprehberger/laravel-healthcheck/actions/workflows/tests.yml/badge.svg)](https://github.com/philiprehberger/laravel-healthcheck/actions/workflows/tests.yml)
-[![Latest Version](https://img.shields.io/packagist/v/philiprehberger/laravel-healthcheck.svg)](https://packagist.org/packages/philiprehberger/laravel-healthcheck)
-[![PHP Version](https://img.shields.io/packagist/php-v/philiprehberger/laravel-healthcheck.svg)](https://packagist.org/packages/philiprehberger/laravel-healthcheck)
-[![License](https://img.shields.io/packagist/l/philiprehberger/laravel-healthcheck.svg)](LICENSE)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/laravel-healthcheck.svg)](https://packagist.org/packages/philiprehberger/laravel-healthcheck)
+[![License](https://img.shields.io/github/license/philiprehberger/laravel-healthcheck)](LICENSE)
 
 Configurable health check endpoint for Laravel with built-in checks and Kubernetes probe support.
 
@@ -283,6 +282,23 @@ If you add auth middleware globally, exclude the probe paths in your ingress or 
 'middleware'   => [],   // no auth on probes — protect at the network level instead
 ```
 
+## API
+
+### `HealthCheck` (Interface)
+
+| Method | Return Type | Description |
+|--------|-------------|-------------|
+| `name(): string` | `string` | Unique check identifier |
+| `check(): CheckResult` | `CheckResult` | Execute the check and return a result |
+
+### `CheckResult`
+
+| Method | Description |
+|--------|-------------|
+| `CheckResult::ok(string $name, string $message, array $meta)` | Passing result |
+| `CheckResult::warning(string $name, string $message, array $meta)` | Non-fatal warning |
+| `CheckResult::critical(string $name, string $message, array $meta)` | Failing result |
+
 ## Development
 
 ```bash
@@ -292,10 +308,6 @@ vendor/bin/pint --test
 vendor/bin/phpstan analyse
 ```
 
-## Changelog
-
-See [CHANGELOG.md](CHANGELOG.md).
-
 ## License
 
-MIT. See [LICENSE](LICENSE).
+MIT
