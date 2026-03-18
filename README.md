@@ -4,7 +4,7 @@
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/philiprehberger/laravel-healthcheck.svg)](https://packagist.org/packages/philiprehberger/laravel-healthcheck)
 [![License](https://img.shields.io/github/license/philiprehberger/laravel-healthcheck)](LICENSE)
 
-Configurable health check endpoint for Laravel with built-in checks and Kubernetes probe support.
+Configurable health check endpoint with built-in checks and Kubernetes probe support.
 
 ## Features
 
