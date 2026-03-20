@@ -6,21 +6,10 @@
 
 Configurable health check endpoint with built-in checks and Kubernetes probe support.
 
-## Features
-
-- Drop-in health check endpoint at `/health` (configurable prefix)
-- Kubernetes liveness (`/health/live`) and readiness (`/health/ready`) probes
-- Built-in checks: database, cache, storage, Redis, queue, environment, HTTP
-- Pluggable: implement `HealthCheck` to add your own checks
-- Per-check timeout with graceful critical fallback
-- Optional result caching to reduce backend load
-- Configurable middleware and route prefix
-- Full test suite, PHPStan level 8, Laravel Pint enforced
-
 ## Requirements
 
-- PHP ^8.2
-- Laravel ^11.0 or ^12.0
+- PHP 8.2+
+- Laravel 11 or 12
 
 ## Installation
 
@@ -91,7 +80,7 @@ When any check is **critical** or **warning**, the overall `status` reflects tha
 
 The overall report status is `critical` if any check is critical; `warning` if any is warning and none is critical; `ok` only if all checks are ok.
 
-## Configuration
+### Configuration
 
 `config/healthcheck.php`:
 
@@ -117,7 +106,7 @@ return [
 ];
 ```
 
-### Restricting access with middleware
+Restricting access with middleware:
 
 ```php
 'middleware' => ['auth:sanctum'],
@@ -125,66 +114,48 @@ return [
 
 Or use a custom IP-allowlist middleware for infrastructure-only access.
 
-### Enabling result caching
-
-To avoid hammering your database on every probe poll:
+Enabling result caching to avoid hammering your database on every probe poll:
 
 ```env
 HEALTHCHECK_CACHE_ENABLED=true
 HEALTHCHECK_CACHE_TTL=30
 ```
 
-## Built-in checks
+### Built-in checks
 
-### DatabaseCheck
-
-Tests that a PDO connection can be established.
+**DatabaseCheck** — Tests that a PDO connection can be established.
 
 ```php
 new DatabaseCheck()                    // uses default connection
 new DatabaseCheck('mysql_reporting')   // named connection
 ```
 
-### CacheCheck
+**CacheCheck** — Writes, reads, and deletes a probe key using the default cache driver. Resource cleanup is guaranteed — the probe key is always removed via `try-finally`, even if cache operations fail.
 
-Writes, reads, and deletes a probe key using the default cache driver.
-Resource cleanup is guaranteed — the probe key is always removed via `try-finally`, even if cache operations fail.
-
-### StorageCheck
-
-Writes, reads, and deletes a probe file on the default filesystem disk.
-Resource cleanup is guaranteed — the probe file is always deleted via `try-finally`, even if read or content verification fails.
+**StorageCheck** — Writes, reads, and deletes a probe file on the default filesystem disk. Resource cleanup is guaranteed — the probe file is always deleted via `try-finally`, even if read or content verification fails.
 
 ```php
 new StorageCheck()        // default disk
 new StorageCheck('s3')    // named disk
 ```
 
-### RedisCheck
-
-Calls `PING` on the Redis connection. Returns a warning (not critical) if the Redis extension and Predis are both absent so the check degrades gracefully in environments without Redis.
+**RedisCheck** — Calls `PING` on the Redis connection. Returns a warning (not critical) if the Redis extension and Predis are both absent so the check degrades gracefully in environments without Redis.
 
 ```php
 new RedisCheck()             // default connection
 new RedisCheck('cache')      // named connection
 ```
 
-### QueueCheck
-
-Resolves the queue connection from the container to verify connectivity.
+**QueueCheck** — Resolves the queue connection from the container to verify connectivity.
 
 ```php
 new QueueCheck()             // default connection
 new QueueCheck('redis')      // named connection
 ```
 
-### EnvironmentCheck
+**EnvironmentCheck** — Returns a **warning** when `APP_DEBUG=true` in a production environment.
 
-Returns a **warning** when `APP_DEBUG=true` in a production environment.
-
-### HttpCheck
-
-Pings an external URL and verifies the response status code.
+**HttpCheck** — Pings an external URL and verifies the response status code.
 
 ```php
 new HttpCheck('https://api.stripe.com')
@@ -205,7 +176,7 @@ $this->app->bind(\PhilipRehberger\Healthcheck\Checks\HttpCheck::class, fn () =>
 
 Then add the class string to `config/healthcheck.php` `checks` array.
 
-## Writing custom checks
+### Writing custom checks
 
 Implement the `HealthCheck` contract:
 
@@ -246,9 +217,9 @@ Register in `config/healthcheck.php`:
 ],
 ```
 
-## Kubernetes probe configuration
+### Kubernetes probe configuration
 
-### Deployment manifest
+Deployment manifest:
 
 ```yaml
 livenessProbe:
@@ -271,8 +242,6 @@ readinessProbe:
 **Liveness** (`/health/live`) — always returns `200` as long as PHP-FPM/Octane is alive. Kubernetes will restart the container only if this stops responding, not on application-level failures.
 
 **Readiness** (`/health/ready`) — returns `200` only when all health checks pass. Kubernetes removes the pod from load balancer rotation while this returns `503`, enabling zero-downtime deploys during database migrations or cold-start delays.
-
-### Ingress — skip auth middleware on probe endpoints
 
 If you add auth middleware globally, exclude the probe paths in your ingress or use a separate middleware group:
 

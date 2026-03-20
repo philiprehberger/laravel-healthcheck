@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.4] - 2026-03-20
+
+### Changed
+- Standardize README structure to match template guide
+
 ## [1.1.3] - 2026-03-18
 
 ### Fixed
@@ -51,7 +56,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PHPStan level 8 static analysis.
 - Laravel Pint code style enforcement.
 
-[Unreleased]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.3...HEAD
+[Unreleased]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.4...HEAD
+[1.1.4]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.3...v1.1.4
 [1.1.3]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.2...v1.1.3
 [1.1.2]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.0...v1.1.1
