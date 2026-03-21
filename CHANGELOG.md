@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.3] - 2026-03-18
+
+### Fixed
+- Fix Larastan include path in `phpstan.neon` and package name in `composer.json` (`nunomaduro/larastan` → `larastan/larastan`)
+
+## [1.1.2] - 2026-03-17
+
+### Changed
+- Standardized package metadata, README structure, and CI workflow per package guide
+
+## [1.1.1] - 2026-03-16
+
+### Changed
+- Standardize composer.json: add type, homepage, scripts
+- Add Development section to README
+
 ## [1.1.0] - 2026-03-13
 
 ### Fixed
@@ -35,6 +51,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PHPStan level 8 static analysis.
 - Laravel Pint code style enforcement.
 
-[Unreleased]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.3...HEAD
+[1.1.3]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.2...v1.1.3
+[1.1.2]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.1...v1.1.2
+[1.1.1]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/philiprehberger/laravel-healthcheck/releases/tag/v1.0.0
