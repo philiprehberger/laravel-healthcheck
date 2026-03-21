@@ -19,8 +19,8 @@ Configurable health check endpoint with built-in checks and Kubernetes probe sup
 
 ## Requirements
 
-- PHP ^8.2
-- Laravel ^11.0 or ^12.0
+- PHP 8.2+
+- Laravel 11 or 12
 
 ## Installation
 
@@ -91,7 +91,7 @@ When any check is **critical** or **warning**, the overall `status` reflects tha
 
 The overall report status is `critical` if any check is critical; `warning` if any is warning and none is critical; `ok` only if all checks are ok.
 
-## Configuration
+### Configuration
 
 `config/healthcheck.php`:
 
@@ -117,7 +117,7 @@ return [
 ];
 ```
 
-### Restricting access with middleware
+#### Restricting access with middleware
 
 ```php
 'middleware' => ['auth:sanctum'],
@@ -125,7 +125,7 @@ return [
 
 Or use a custom IP-allowlist middleware for infrastructure-only access.
 
-### Enabling result caching
+#### Enabling result caching
 
 To avoid hammering your database on every probe poll:
 
@@ -134,9 +134,9 @@ HEALTHCHECK_CACHE_ENABLED=true
 HEALTHCHECK_CACHE_TTL=30
 ```
 
-## Built-in checks
+### Built-in checks
 
-### DatabaseCheck
+#### DatabaseCheck
 
 Tests that a PDO connection can be established.
 
@@ -145,12 +145,12 @@ new DatabaseCheck()                    // uses default connection
 new DatabaseCheck('mysql_reporting')   // named connection
 ```
 
-### CacheCheck
+#### CacheCheck
 
 Writes, reads, and deletes a probe key using the default cache driver.
 Resource cleanup is guaranteed — the probe key is always removed via `try-finally`, even if cache operations fail.
 
-### StorageCheck
+#### StorageCheck
 
 Writes, reads, and deletes a probe file on the default filesystem disk.
 Resource cleanup is guaranteed — the probe file is always deleted via `try-finally`, even if read or content verification fails.
@@ -160,7 +160,7 @@ new StorageCheck()        // default disk
 new StorageCheck('s3')    // named disk
 ```
 
-### RedisCheck
+#### RedisCheck
 
 Calls `PING` on the Redis connection. Returns a warning (not critical) if the Redis extension and Predis are both absent so the check degrades gracefully in environments without Redis.
 
@@ -169,7 +169,7 @@ new RedisCheck()             // default connection
 new RedisCheck('cache')      // named connection
 ```
 
-### QueueCheck
+#### QueueCheck
 
 Resolves the queue connection from the container to verify connectivity.
 
@@ -178,11 +178,11 @@ new QueueCheck()             // default connection
 new QueueCheck('redis')      // named connection
 ```
 
-### EnvironmentCheck
+#### EnvironmentCheck
 
 Returns a **warning** when `APP_DEBUG=true` in a production environment.
 
-### HttpCheck
+#### HttpCheck
 
 Pings an external URL and verifies the response status code.
 
@@ -205,7 +205,7 @@ $this->app->bind(\PhilipRehberger\Healthcheck\Checks\HttpCheck::class, fn () =>
 
 Then add the class string to `config/healthcheck.php` `checks` array.
 
-## Writing custom checks
+### Writing custom checks
 
 Implement the `HealthCheck` contract:
 
@@ -246,9 +246,9 @@ Register in `config/healthcheck.php`:
 ],
 ```
 
-## Kubernetes probe configuration
+### Kubernetes probe configuration
 
-### Deployment manifest
+#### Deployment manifest
 
 ```yaml
 livenessProbe:
@@ -272,7 +272,7 @@ readinessProbe:
 
 **Readiness** (`/health/ready`) — returns `200` only when all health checks pass. Kubernetes removes the pod from load balancer rotation while this returns `503`, enabling zero-downtime deploys during database migrations or cold-start delays.
 
-### Ingress — skip auth middleware on probe endpoints
+#### Ingress — skip auth middleware on probe endpoints
 
 If you add auth middleware globally, exclude the probe paths in your ingress or use a separate middleware group:
 
