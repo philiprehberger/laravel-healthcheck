@@ -1,6 +1,6 @@
 {
     "name": "philiprehberger/laravel-healthcheck",
-    "description": "Configurable health check endpoint with built-in checks and Kubernetes probe support.",
+    "description": "Configurable health check endpoint with built-in checks and Kubernetes probe support",
     "keywords": ["laravel", "health", "healthcheck", "kubernetes", "k8s", "monitoring"],
     "license": "MIT",
     "authors": [
