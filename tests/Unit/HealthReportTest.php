@@ -6,6 +6,7 @@ namespace PhilipRehberger\Healthcheck\Tests\Unit;
 
 use PhilipRehberger\Healthcheck\CheckResult;
 use PhilipRehberger\Healthcheck\HealthReport;
+use PhilipRehberger\Healthcheck\HealthStatus;
 use PhilipRehberger\Healthcheck\Tests\TestCase;
 
 class HealthReportTest extends TestCase
@@ -17,7 +18,7 @@ class HealthReportTest extends TestCase
             CheckResult::ok('cache'),
         ], 12.5);
 
-        $this->assertSame('ok', $report->status);
+        $this->assertSame(HealthStatus::Ok, $report->status);
         $this->assertTrue($report->isHealthy());
     }
 
@@ -28,18 +29,18 @@ class HealthReportTest extends TestCase
             CheckResult::critical('cache', 'Down.'),
         ], 5.0);
 
-        $this->assertSame('critical', $report->status);
+        $this->assertSame(HealthStatus::Critical, $report->status);
         $this->assertFalse($report->isHealthy());
     }
 
-    public function test_warning_without_critical_produces_warning_status(): void
+    public function test_warning_without_critical_produces_degraded_status(): void
     {
         $report = new HealthReport([
             CheckResult::ok('database'),
             CheckResult::warning('environment', 'Debug on.'),
         ], 3.0);
 
-        $this->assertSame('warning', $report->status);
+        $this->assertSame(HealthStatus::Degraded, $report->status);
         $this->assertFalse($report->isHealthy());
     }
 
@@ -50,7 +51,38 @@ class HealthReportTest extends TestCase
             CheckResult::critical('cache', 'Down.'),
         ], 3.0);
 
-        $this->assertSame('critical', $report->status);
+        $this->assertSame(HealthStatus::Critical, $report->status);
+    }
+
+    public function test_degraded_check_produces_degraded_status(): void
+    {
+        $report = new HealthReport([
+            CheckResult::ok('database'),
+            CheckResult::degraded('cache', 'High latency.'),
+        ], 4.0);
+
+        $this->assertSame(HealthStatus::Degraded, $report->status);
+        $this->assertFalse($report->isHealthy());
+    }
+
+    public function test_critical_takes_precedence_over_degraded(): void
+    {
+        $report = new HealthReport([
+            CheckResult::degraded('cache', 'High latency.'),
+            CheckResult::critical('database', 'Connection refused.'),
+        ], 3.0);
+
+        $this->assertSame(HealthStatus::Critical, $report->status);
+    }
+
+    public function test_degraded_and_warning_both_produce_degraded_status(): void
+    {
+        $report = new HealthReport([
+            CheckResult::degraded('cache', 'High latency.'),
+            CheckResult::warning('environment', 'Debug on.'),
+        ], 3.0);
+
+        $this->assertSame(HealthStatus::Degraded, $report->status);
     }
 
     public function test_to_array_structure(): void
@@ -84,7 +116,7 @@ class HealthReportTest extends TestCase
     {
         $report = new HealthReport([], 0.0);
 
-        $this->assertSame('ok', $report->status);
+        $this->assertSame(HealthStatus::Ok, $report->status);
         $this->assertTrue($report->isHealthy());
     }
 
@@ -93,5 +125,53 @@ class HealthReportTest extends TestCase
         $report = new HealthReport([], 12.123456);
 
         $this->assertSame(12.12, $report->toArray()['duration_ms']);
+    }
+
+    public function test_to_array_status_is_string(): void
+    {
+        $report = new HealthReport([
+            CheckResult::ok('database'),
+        ], 1.0);
+
+        $this->assertSame('ok', $report->toArray()['status']);
+    }
+
+    public function test_get_metrics_returns_empty_when_no_metrics(): void
+    {
+        $report = new HealthReport([
+            CheckResult::ok('database'),
+            CheckResult::ok('cache'),
+        ], 1.0);
+
+        $this->assertSame([], $report->getMetrics());
+    }
+
+    public function test_get_metrics_aggregates_check_metrics(): void
+    {
+        $report = new HealthReport([
+            CheckResult::ok('database')->withMetrics(['latency_ms' => 5, 'connections' => 10]),
+            CheckResult::ok('cache')->withMetrics(['hit_rate' => 0.95]),
+            CheckResult::ok('storage'),
+        ], 1.0);
+
+        $metrics = $report->getMetrics();
+
+        $this->assertCount(2, $metrics);
+        $this->assertSame(['latency_ms' => 5, 'connections' => 10], $metrics['database']);
+        $this->assertSame(['hit_rate' => 0.95], $metrics['cache']);
+    }
+
+    public function test_health_status_enum_values(): void
+    {
+        $this->assertSame('ok', HealthStatus::Ok->value);
+        $this->assertSame('degraded', HealthStatus::Degraded->value);
+        $this->assertSame('critical', HealthStatus::Critical->value);
+    }
+
+    public function test_health_status_enum_from_string(): void
+    {
+        $this->assertSame(HealthStatus::Ok, HealthStatus::from('ok'));
+        $this->assertSame(HealthStatus::Degraded, HealthStatus::from('degraded'));
+        $this->assertSame(HealthStatus::Critical, HealthStatus::from('critical'));
     }
 }

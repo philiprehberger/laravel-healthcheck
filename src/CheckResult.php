@@ -10,17 +10,26 @@ class CheckResult
 
     public const STATUS_WARNING = 'warning';
 
+    public const STATUS_DEGRADED = 'degraded';
+
     public const STATUS_CRITICAL = 'critical';
+
+    /** @var array<string, mixed> */
+    public readonly array $metrics;
 
     /**
      * @param  array<string, mixed>  $meta
+     * @param  array<string, mixed>  $metrics
      */
     public function __construct(
         public readonly string $name,
         public readonly string $status,
         public readonly string $message = '',
         public readonly array $meta = [],
-    ) {}
+        array $metrics = [],
+    ) {
+        $this->metrics = $metrics;
+    }
 
     /**
      * @param  array<string, mixed>  $meta
@@ -41,6 +50,14 @@ class CheckResult
     /**
      * @param  array<string, mixed>  $meta
      */
+    public static function degraded(string $name, string $message = '', array $meta = []): self
+    {
+        return new self($name, self::STATUS_DEGRADED, $message, $meta);
+    }
+
+    /**
+     * @param  array<string, mixed>  $meta
+     */
     public static function critical(string $name, string $message = '', array $meta = []): self
     {
         return new self($name, self::STATUS_CRITICAL, $message, $meta);
@@ -56,9 +73,22 @@ class CheckResult
         return $this->status === self::STATUS_WARNING;
     }
 
+    public function isDegraded(): bool
+    {
+        return $this->status === self::STATUS_DEGRADED;
+    }
+
     public function isCritical(): bool
     {
         return $this->status === self::STATUS_CRITICAL;
+    }
+
+    /**
+     * @param  array<string, mixed>  $metrics
+     */
+    public function withMetrics(array $metrics): self
+    {
+        return new self($this->name, $this->status, $this->message, $this->meta, $metrics);
     }
 
     /**
@@ -71,6 +101,7 @@ class CheckResult
             'status' => $this->status,
             'message' => $this->message,
             'meta' => $this->meta,
+            'metrics' => $this->metrics,
         ];
     }
 }

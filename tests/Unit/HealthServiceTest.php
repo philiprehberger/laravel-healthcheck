@@ -8,6 +8,7 @@ use PhilipRehberger\Healthcheck\CheckResult;
 use PhilipRehberger\Healthcheck\Contracts\HealthCheck;
 use PhilipRehberger\Healthcheck\HealthReport;
 use PhilipRehberger\Healthcheck\HealthService;
+use PhilipRehberger\Healthcheck\HealthStatus;
 use PhilipRehberger\Healthcheck\Tests\TestCase;
 use RuntimeException;
 
@@ -62,7 +63,7 @@ class HealthServiceTest extends TestCase
 
         $this->assertInstanceOf(HealthReport::class, $report);
         $this->assertCount(2, $report->checks);
-        $this->assertSame('ok', $report->status);
+        $this->assertSame(HealthStatus::Ok, $report->status);
     }
 
     public function test_run_all_aggregates_critical_status(): void
@@ -73,7 +74,7 @@ class HealthServiceTest extends TestCase
 
         $report = $service->runAll();
 
-        $this->assertSame('critical', $report->status);
+        $this->assertSame(HealthStatus::Critical, $report->status);
         $this->assertFalse($report->isHealthy());
     }
 
@@ -105,7 +106,7 @@ class HealthServiceTest extends TestCase
 
         $report = $service->runAll();
 
-        $this->assertSame('critical', $report->status);
+        $this->assertSame(HealthStatus::Critical, $report->status);
         $result = $report->checks[0];
         $this->assertSame('flaky', $result->name);
         $this->assertStringContainsString('Something went wrong.', $result->message);
@@ -149,7 +150,7 @@ class HealthServiceTest extends TestCase
         $report = $service->runAll();
 
         $this->assertInstanceOf(HealthReport::class, $report);
-        $this->assertSame('ok', $report->status);
+        $this->assertSame(HealthStatus::Ok, $report->status);
         $this->assertCount(0, $report->checks);
     }
 }
