@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.2.1] - 2026-03-23
+
+### Changed
+- Add phpstan/extension-installer to require-dev with allow-plugins config
+- Remove manual larastan include from phpstan.neon (extension-installer handles it)
+- Remove non-standard Features section from README per template guide
+
 ## [1.2.0] - 2026-03-22
 
 ### Added
@@ -72,7 +79,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - PHPStan level 8 static analysis.
 - Laravel Pint code style enforcement.
 
-[Unreleased]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.2.1...HEAD
+[1.2.1]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.2.0...v1.2.1
 [1.2.0]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.5...v1.2.0
 [1.1.5]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.3...v1.1.5
 [1.1.3]: https://github.com/philiprehberger/laravel-healthcheck/compare/v1.1.2...v1.1.3
